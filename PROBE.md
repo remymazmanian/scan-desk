@@ -52,14 +52,22 @@ ScanSmart features that are **out of scope** under the "no network" rule: sendin
 
 The scanner's physical button can't be taken over through Image Capture, because Epson's Event Manager owns it. It will keep opening FastFoto or ScanSmart unless that's changed in Event Manager. Scans start from the app.
 
+## Photo test 1: 300 dpi, duplex, driver features off
+
+Stack of 9 prints (about 4×6), 18 files, **17.5 s total** over Wi-Fi (about 2 s per photo with both sides). Raw output is in `~/Pictures/ScanProbe/300dpi-rgb-duplex-*`.
+
+- **Order:** strictly alternating, front then back. Odd files (`scan.tiff`, `scan 2.tiff`…) are the image sides, even files are the backs, so pairing is trivial.
+- **Front side:** the driver's "front" is the printed image side, as the prints were loaded.
+- **Frame:** every file is the full requested area (2550 × 3300 px for Letter). The print sits at the top, against a light gray-blue feeder background. Below the end of the print, the area is padded with white. So the app must crop every file, and scanning a Letter-length area for a 6-in print wastes transfer time.
+- **Edges:** print edges show clear contrast against the gray background, which is a good case for Vision rectangle detection.
+- **Backs:** the blank backs show as a plain white rectangle on gray, with about 2.5 MB files against about 5.4 MB for fronts. Blank detection on the cropped back (low variance, little ink) looks easy.
+- **Rotation:** at least one print came out with its picture sideways. Auto-rotation is needed. The driver's `VF_AUTOROTATE` is untested; the fallback is face orientation from Vision.
+
 ## Still to test
 
-Photos (3–5 prints in the feeder):
+Photos (reload the same stack):
 
-- [ ] 300 dpi, duplex: page order, and which physical side counts as "front".
-- [ ] The same stack at 600 dpi: timing and file size.
-- [ ] Driver Auto Size Detection, Deskew and Auto Rotation on photos (`--set VF_AUTOCROP=1 --set VF_AUTOROTATE=true`), compared with doing it in Vision.
-- [ ] Skip Blank Pages on photo backs (`--set VF_BLANKPAGESKIP=10`).
+- [ ] 600 dpi with the driver's Auto Size Detection, Auto Rotation and Skip Blank Pages switched on (`--set VF_AUTOCROP=1 --set VF_AUTOROTATE=true --set VF_BLANKPAGESKIP=10`). This checks timing, file size, and whether the driver can do the cropping, rotation and blank-back skipping itself.
 
 Documents (2–3 pages of anything non-sensitive):
 
@@ -71,8 +79,6 @@ Other:
 
 - [ ] USB connection (optional).
 - [ ] Whether ScanSmart or FastFoto running at the same time can block a scan from our app.
-
-The test scan run so far went through whatever was already in the feeder. That turned out to be a printed document, not photos, so it only confirms the mechanics above.
 
 ## Toolchain note
 

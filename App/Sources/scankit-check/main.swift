@@ -53,12 +53,12 @@ do {
                                                     skipBlankBacks: true, enhance: enhance))
         for path in args {
             let t0 = Date()
-            switch try p.handle(page: URL(fileURLWithPath: path)) {
+            for event in try p.handle(page: URL(fileURLWithPath: path)) { switch event {
             case .front(let r):
                 print("front \(r.name)  orient=\(name(r.orientation))  enhanced=\(r.enhanced != nil)  " + String(format: "%.2fs", Date().timeIntervalSince(t0)))
             case .back(let r):
-                print("  back \(r.name)  " + (r.backSkippedAsBlank ? "skipped (blank)" : "saved") + String(format: "  %.2fs", Date().timeIntervalSince(t0)))
-            }
+                print("  back \(r.name)  " + (r.backMissing ? "MISSING (next picture arrived)" : r.backSkippedAsBlank ? "skipped (blank)" : "saved") + String(format: "  %.2fs", Date().timeIntervalSince(t0)))
+            } }
         }
 
     case "docs":

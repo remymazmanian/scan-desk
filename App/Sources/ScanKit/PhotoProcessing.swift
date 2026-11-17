@@ -33,6 +33,12 @@ public enum PhotoProcessing {
         inkFraction(img) < threshold
     }
 
+    /// A print's picture side has far more ink than any back (blank, stamped or written on).
+    /// Used to notice when the scanner skipped a back, so pairing doesn't shift.
+    public static func looksLikePictureSide(_ img: CGImage) -> Bool {
+        inkFraction(img) > 0.05
+    }
+
     // MARK: Crop and deskew
 
     /// True when the page came back at the full requested Letter area, meaning the driver's

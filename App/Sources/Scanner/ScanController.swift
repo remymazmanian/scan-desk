@@ -54,8 +54,8 @@ final class ScanController: ObservableObject {
         batchDPI = o.dpi
         let pipeline = PhotoPipeline(options: o)
         start(o.scanParameters, temp: temp, onPage: { url in
-            let event = try pipeline.handle(page: url)
-            return { [weak self] in self?.apply(event) }
+            let events = try pipeline.handle(page: url)
+            return { [weak self] in events.forEach { self?.apply($0) } }
         }, finish: {
             return { [weak self] in
                 guard let self else { return }
@@ -79,7 +79,7 @@ final class ScanController: ObservableObject {
         case .back(let r):
             guard let i = items.lastIndex(where: { $0.photo?.name == r.name }) else { return }
             items[i].photo = r
-            let back = r.backSkippedAsBlank ? "blank back skipped" : "back saved"
+            let back = r.backMissing ? "no back received" : r.backSkippedAsBlank ? "blank back skipped" : "back saved"
             items[i].detail = items[i].detail.isEmpty ? back.capitalizedFirst : "\(items[i].detail), \(back)"
         }
     }

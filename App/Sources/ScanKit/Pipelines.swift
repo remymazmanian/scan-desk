@@ -52,6 +52,8 @@ public struct PhotoResult {
     public var enhanced: URL?
     public var back: URL?
     public var backSkippedAsBlank = false
+    /// The scanner sent the next picture where this photo's back was expected.
+    public var backMissing = false
     public var orientation: CGImagePropertyOrientation
     public var thumbnail: CGImage
 }
@@ -61,8 +63,7 @@ public final class PhotoPipeline {
     public let options: PhotoOptions
     public let prefix: String
     private var nextNumber: Int
-    private var pageIndex = 0
-    private var current: PhotoResult?
+    private var current: PhotoResult?   // front waiting for its back
 
     public init(options: PhotoOptions) {
         self.options = options
@@ -75,15 +76,24 @@ public final class PhotoPipeline {
         case back(PhotoResult)   // the same photo, updated with its back
     }
 
-    /// Handles one page straight from the scanner, in feeder order.
-    public func handle(page url: URL) throws -> Event {
-        defer { pageIndex += 1 }
-        let isBack = options.scanBacks && pageIndex % 2 == 1
-        return isBack ? try handleBack(url) : try handleFront(url)
+    /// Handles one page straight from the scanner, in feeder order. Pages normally alternate
+    /// front, back; if a back is missing (the next picture arrives instead), the pending photo
+    /// is closed without a back and the page is handled as a new front.
+    public func handle(page url: URL) throws -> [Event] {
+        let img = try ImageUtil.load(url)
+        if options.scanBacks, var pending = current {
+            if PhotoProcessing.looksLikePictureSide(img) {
+                pending.backMissing = true
+                current = nil
+                return [.back(pending), try handleFront(img)]
+            }
+            return [try handleBack(img)]
+        }
+        return [try handleFront(img)]
     }
 
-    private func handleFront(_ url: URL) throws -> Event {
-        var img = try ImageUtil.load(url)
+    private func handleFront(_ loaded: CGImage) throws -> Event {
+        var img = loaded
         if PhotoProcessing.isUncropped(img, dpi: options.dpi), let cropped = PhotoProcessing.detectAndCrop(img) {
             img = cropped
         }
@@ -109,10 +119,10 @@ public final class PhotoPipeline {
         return .front(result)
     }
 
-    private func handleBack(_ url: URL) throws -> Event {
-        guard var result = current else { throw ScanError.unreadable(url) }
+    private func handleBack(_ loaded: CGImage) throws -> Event {
+        guard var result = current else { return try handleFront(loaded) }
         current = nil
-        var img = try ImageUtil.load(url)
+        var img = loaded
         if PhotoProcessing.isUncropped(img, dpi: options.dpi), let cropped = PhotoProcessing.detectAndCrop(img) {
             img = cropped
         }

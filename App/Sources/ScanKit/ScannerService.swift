@@ -1,5 +1,8 @@
 import Foundation
 import ImageCaptureCore
+import os
+
+let scanLog = Logger(subsystem: "local.scanner.app", category: "scanner")
 
 public enum ScannerStatus: Equatable {
     case searching
@@ -102,6 +105,7 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
         scanner.documentName = "page"
         scanner.documentUTI = "public.tiff"
 
+        scanLog.info("scan: \(p.dpi) dpi, color \(p.color.rawValue, privacy: .public), duplex requested \(p.duplex), duplex set \(feeder.duplexScanningEnabled)")
         pageHandler = onPage
         self.completion = completion
         status = .scanning(deviceName)
@@ -110,12 +114,24 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
 
     public func cancel() { scanner?.cancelScan() }
 
+    /// Sets a driver feature. The Epson driver seems to ignore a write that matches the value it
+    /// already reports (its blank-page skip read "Off" but still dropped blank backs), so every
+    /// write first moves to a different value and then to the wanted one.
     private func setFeature(_ name: String, on fu: ICScannerFunctionalUnit, enumValue: Int? = nil, bool: Bool? = nil) {
-        guard let f = fu.vendorFeatures?.first(where: { $0.internalName == name }) else { return }
-        if let bool, let b = f as? ICScannerFeatureBoolean { b.value = bool }
+        guard let f = fu.vendorFeatures?.first(where: { $0.internalName == name }) else {
+            scanLog.info("feature \(name, privacy: .public) not offered by driver")
+            return
+        }
+        if let bool, let b = f as? ICScannerFeatureBoolean {
+            b.value = !bool
+            b.value = bool
+            scanLog.info("feature \(name, privacy: .public) = \(b.value)")
+        }
         if let enumValue, let e = f as? ICScannerFeatureEnumeration,
            e.values.contains(NSNumber(value: enumValue)) {
+            if let other = e.values.first(where: { $0.intValue != enumValue }) { e.currentValue = other }
             e.currentValue = NSNumber(value: enumValue)
+            scanLog.info("feature \(name, privacy: .public) = \(String(describing: e.currentValue), privacy: .public)")
         }
     }
 
@@ -233,10 +249,12 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
     }
 
     public func scannerDevice(_ scanner: ICScannerDevice, didScanTo url: URL) {
+        scanLog.info("page received: \(url.lastPathComponent, privacy: .public)")
         pageHandler?(url)
     }
 
     public func scannerDevice(_ scanner: ICScannerDevice, didCompleteScanWithError error: (any Error)?) {
+        scanLog.info("scan complete, error: \(String(describing: error), privacy: .public)")
         let done = completion
         completion = nil
         pageHandler = nil

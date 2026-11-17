@@ -7,7 +7,7 @@ public enum PhotosImporter {
         guard !files.isEmpty else { return 0 }
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
-            throw NSError(domain: "Scanner", code: 1, userInfo: [
+            throw NSError(domain: "ScanDesk", code: 1, userInfo: [
                 NSLocalizedDescriptionKey: "Photos access was not allowed. You can allow it in System Settings → Privacy & Security → Photos.",
             ])
         }

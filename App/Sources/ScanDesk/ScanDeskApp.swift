@@ -1,12 +1,12 @@
 import SwiftUI
 
 @main
-struct ScannerApp: App {
+struct ScanDeskApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @StateObject private var controller = ScanController()
 
     var body: some Scene {
-        Window("Scanner", id: "main") {
+        Window("Scan Desk", id: "main") {
             ContentView()
                 .environmentObject(controller)
                 .frame(minWidth: 960, minHeight: 700)

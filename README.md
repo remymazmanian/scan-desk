@@ -1,4 +1,4 @@
-# Scanner
+# Scan Desk
 
 A native macOS app (Swift, SwiftUI, macOS 15+, Apple Silicon) for the Epson FastFoto FF-680W. It replaces both Epson FastFoto (photos) and Epson ScanSmart (documents). It talks to the scanner through Apple's Image Capture framework and Epson's official driver (installed with Epson Scan 2), and uses no third-party code. It has no telemetry, and its only network traffic is finding the scanner and scanning from it.
 
@@ -9,13 +9,13 @@ This project isn't affiliated with or endorsed by Epson. Epson, FastFoto and Sca
 Building needs only the Xcode Command Line Tools. Running the tests uses Xcode if it's installed (see Tests).
 
 ```
-scripts/build-app.sh            # builds and signs build/Scanner.app
+scripts/build-app.sh            # builds and signs build/Scan Desk.app
 scripts/build-app.sh --install  # also copies it to ~/Applications
 ```
 
 **Signing:** the build script signs with a "Developer ID Application" certificate from the keychain, using the hardened runtime and a secure timestamp. To pick a specific certificate, set `SIGN_IDENTITY` to its SHA-1 hash. Without such a certificate the app is signed ad-hoc and runs only on the Mac that built it.
 
-**Notarizing for distribution:** `NOTARY_PROFILE=<profile> scripts/build-app.sh --notarize` submits the signed app to Apple, staples the ticket, and leaves `build/Scanner.zip` ready to share. `<profile>` is a keychain profile created once with `xcrun notarytool store-credentials`. It needs Xcode. Without notarization, a copy downloaded on another Mac is blocked by Gatekeeper.
+**Notarizing for distribution:** `NOTARY_PROFILE=<profile> scripts/build-app.sh --notarize` submits the signed app to Apple, staples the ticket, and leaves `build/ScanDesk.zip` ready to share. `<profile>` is a keychain profile created once with `xcrun notarytool store-credentials`. It needs Xcode. Without notarization, a copy downloaded on another Mac is blocked by Gatekeeper.
 
 **Icon:** `swift scripts/make-icon.swift` redraws the icon in code and writes `App/Resources/AppIcon.icns`, which the build script bundles.
 
@@ -71,7 +71,7 @@ The first three are limits of the scanner or its driver; see [PROBE.md](PROBE.md
 | Path | What |
 |---|---|
 | `App/Sources/ScanKit` | Scanner connection, image processing, PDF, naming, Photos import |
-| `App/Sources/Scanner` | The SwiftUI app |
+| `App/Sources/ScanDesk` | The SwiftUI app |
 | `App/Sources/scankit-check` | Runs the processing on saved raw scans, without a scanner |
 | `App/Tests` | Tests on generated images |
 | `scripts/` | Build, test and icon scripts |

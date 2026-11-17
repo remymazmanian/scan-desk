@@ -4,7 +4,7 @@ import PackageDescription
 let swift5: [SwiftSetting] = [.swiftLanguageMode(.v5)]
 
 let package = Package(
-    name: "Scanner",
+    name: "ScanDesk",
     platforms: [.macOS(.v15)],
     targets: [
         .target(
@@ -16,7 +16,7 @@ let package = Package(
                 .linkedFramework("Photos"),
             ]
         ),
-        .executableTarget(name: "Scanner", dependencies: ["ScanKit"], swiftSettings: swift5),
+        .executableTarget(name: "ScanDesk", dependencies: ["ScanKit"], swiftSettings: swift5),
         .executableTarget(name: "scankit-check", dependencies: ["ScanKit"], swiftSettings: swift5),
         .testTarget(name: "ScanKitTests", dependencies: ["ScanKit"]),
     ]

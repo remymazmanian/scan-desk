@@ -243,7 +243,7 @@ final class ScanController: ObservableObject {
 extension ScanController {
     /// Developer aid, off by default and not in the UI:
     ///   defaults write <bundle id> debug.keepRawPages -bool YES
-    /// copies each batch's raw scanner pages to ~/Pictures/Scanner Raw Pages/<time> for offline tuning.
+    /// copies each batch's raw scanner pages to ~/Pictures/Scan Desk Raw Pages/<time> for offline tuning.
     nonisolated static var keepsRawPages: Bool { UserDefaults.standard.bool(forKey: "debug.keepRawPages") }
 
     nonisolated static func keepRawPagesIfAsked(_ temp: URL) {
@@ -251,7 +251,7 @@ extension ScanController {
         let f = DateFormatter()
         f.dateFormat = "yyyyMMdd-HHmmss"
         let dest = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Pictures/Scanner Raw Pages/\(f.string(from: Date()))", isDirectory: true)
+            .appendingPathComponent("Pictures/Scan Desk Raw Pages/\(f.string(from: Date()))", isDirectory: true)
         try? FileManager.default.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? FileManager.default.copyItem(at: temp, to: dest)
         scanLog.info("kept raw pages in \(dest.lastPathComponent, privacy: .public)")

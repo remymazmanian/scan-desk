@@ -26,7 +26,7 @@ public enum PDFBuilder {
 
         var box = CGRect.zero
         guard let ctx = CGContext(url as CFURL, mediaBox: &box,
-                                  [kCGPDFContextCreator: "Scanner"] as CFDictionary)
+                                  [kCGPDFContextCreator: "Scan Desk"] as CFDictionary)
         else { throw ScanError.writeFailed(url) }
 
         for (i, page) in pages.enumerated() {

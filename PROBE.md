@@ -54,7 +54,7 @@ The scanner's physical button can't be taken over through Image Capture, because
 
 ## Photo test 1: 300 dpi, duplex, driver features off
 
-Stack of 9 prints (about 4×6), 18 files, **17.5 s total** over Wi-Fi (about 2 s per photo with both sides). Raw output is in `~/Pictures/ScanProbe/300dpi-rgb-duplex-*`.
+Stack of 9 prints (about 4×6), 18 files, **17.5 s total** over Wi-Fi (about 2 s per photo with both sides). The raw test output has since been deleted.
 
 - **Order:** strictly alternating, front then back. Odd files (`scan.tiff`, `scan 2.tiff`…) are the image sides, even files are the backs, so pairing is trivial.
 - **Front side:** the driver's "front" is the printed image side, as the prints were loaded.
@@ -65,7 +65,7 @@ Stack of 9 prints (about 4×6), 18 files, **17.5 s total** over Wi-Fi (about 2 s
 
 ## Photo test 2: 600 dpi, duplex, driver crop, rotation and blank-skip on
 
-Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-up. Raw output is in `~/Pictures/ScanProbe/600dpi-rgb-duplex-vf-*`.
+Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-up. The raw test output has since been deleted.
 
 - **Auto Size Detection (`VF_AUTOCROP=1`): works well.** Each file is cropped tight to the print, at 2404–2420 × 3580–3596 px (4.0 × 6.0 in at 600 dpi), straight, with no background left. About 10 MB of TIFF per photo. **The app should use this** rather than cropping a Letter page itself: it gives less data, faster transfers and already-straight edges. Vision rectangle detection then only needs to be a check or fallback.
 - **Skip Blank Pages (`VF_BLANKPAGESKIP=10`): works.** All 9 blank backs were dropped. But the app **should not use it**: once the driver drops pages, there's no way to tell which back belongs to which front. The app should keep every back and skip blanks itself. This matches the 300 dpi test, where blank backs were easy to spot.
@@ -90,7 +90,7 @@ The app no longer assumes pages strictly alternate front and back. If a picture 
 
 ## Document test 1: 300 dpi gray, duplex, driver auto-size, rotation and blank-skip on
 
-3 Letter sheets, 6 files, **9.0 s total**. Raw output is in `~/Pictures/ScanProbe/300dpi-gray-duplex-vf-*`.
+3 Letter sheets, 6 files, **9.0 s total**. The raw test output has since been deleted.
 
 - **Gray: works.** Files are 8-bit grayscale. The front pages are 0.8–2 MB of TIFF each.
 - **Auto Size Detection: works on paper.** Each page comes out at about 2530 × 3313 px, which is Letter size, cropped to the sheet.
@@ -99,7 +99,7 @@ The app no longer assumes pages strictly alternate front and back. If a picture 
 
 ## Document test 2: 300 dpi black and white, duplex, holes, blank-skip, rotation and auto-size on
 
-Same 3 sheets, 6 files, **9.7 s total**. Raw output is in `~/Pictures/ScanProbe/300dpi-bw-duplex-vf-*`.
+Same 3 sheets, 6 files, **9.7 s total**. The raw test output has since been deleted.
 
 - **Black and white: works.** The driver accepts `pixelDataType = BW` with 1-bit depth. The TIFF it writes is 8-bit gray holding only black and white, so the files are small (20–75 KB per front). For PDFs, the app should convert pages to true 1-bit itself.
 - **Remove Punch Holes (`VF_PUNCHEDHOLE`): no visible effect.** The holes still show as solid black dots on the backs.

@@ -77,3 +77,7 @@ The first three are limits of the scanner or its driver; see [PROBE.md](PROBE.md
 | `scripts/` | Build, test and icon scripts |
 | `PROBE.md` | What the scanner's driver does and doesn't offer |
 | `Probe/` | A command-line probe that lists what the driver exposes and runs test scans |
+
+## License
+
+MIT. See [LICENSE](LICENSE).

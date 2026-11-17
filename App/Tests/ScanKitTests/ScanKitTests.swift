@@ -60,6 +60,13 @@ struct DetectionTests {
         #expect(!PhotoProcessing.isBlank(img))
     }
 
+    /// Regression: a single handwritten word on an otherwise blank back was skipped as blank.
+    @Test func oneSmallWordIsNotBlank() {
+        let page = Fixtures.pageWithOneWord(dpi: 300)
+        #expect(!PhotoProcessing.isBlank(page))
+        #expect(!PhotoProcessing.isBlankPage(page).blank)
+    }
+
     @Test func punchHolesAloneCountAsBlank() {
         #expect(PhotoProcessing.isBlank(Fixtures.blankPage(dpi: 150, punchHoles: true)))
         #expect(!PhotoProcessing.isBlank(Fixtures.textPage(dpi: 150, lines: ["A line of text on the page"])))

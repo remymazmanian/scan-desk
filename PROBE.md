@@ -85,7 +85,8 @@ The app no longer assumes pages strictly alternate front and back. If a picture 
 
 ## Still to test
 
-- [ ] A photo with handwriting on the back, to tune the app's blank-back threshold.
+- [x] Handwriting on a back. A single pen-written word on a sheet's back was captured by the scanner, but the app's first blank check (share of ink over the whole page) skipped it: 0.06% ink, the same as a truly blank page. The app now looks for the densest small patch of marks instead, ignoring the outer margin. The handwritten word measured 21% and blank backs at most 0.33% (punch holes included), so the threshold is 3%. Writing that sits entirely inside the outer 6.5% margin is still treated as blank.
+- [ ] The same check on a photo back with faint pencil writing.
 
 ## Document test 1: 300 dpi gray, duplex, driver auto-size, rotation and blank-skip on
 

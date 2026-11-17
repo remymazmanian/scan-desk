@@ -127,7 +127,9 @@ public final class PhotoPipeline {
         if PhotoProcessing.isUncropped(img, dpi: options.dpi), let cropped = PhotoProcessing.detectAndCrop(img) {
             img = cropped
         }
-        if options.skipBlankBacks && PhotoProcessing.isBlank(img) {
+        let check = PhotoProcessing.isBlankPage(img)
+        scanLog.info("photo back for \(result.name, privacy: .public): densest mark \(String(format: "%.2f%%", check.mark * 100), privacy: .public)")
+        if options.skipBlankBacks && check.blank {
             result.backSkippedAsBlank = true
             return .back(result)
         }
@@ -171,7 +173,7 @@ public final class DocumentPipeline {
     public func handle(page url: URL) throws -> Event {
         let img = try ImageUtil.load(url)
         let check = PhotoProcessing.isBlankPage(img)
-        scanLog.info("document page \(url.lastPathComponent, privacy: .public): \(img.width)x\(img.height), ink \(String(format: "%.3f%%", check.ink * 100), privacy: .public)\(check.blank && self.options.skipBlankPages ? ", skipped as blank" : "", privacy: .public)")
+        scanLog.info("document page \(url.lastPathComponent, privacy: .public): \(img.width)x\(img.height), densest mark \(String(format: "%.2f%%", check.mark * 100), privacy: .public)\(check.blank && self.options.skipBlankPages ? ", skipped as blank" : "", privacy: .public)")
         if options.skipBlankPages && check.blank {
             skippedBlank += 1
             return .skippedBlank

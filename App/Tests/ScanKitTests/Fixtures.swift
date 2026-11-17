@@ -101,6 +101,22 @@ enum Fixtures {
         return ctx.makeImage()!
     }
 
+    /// A blank page with one short handwritten-size word, like a quick note on the back.
+    static func pageWithOneWord(dpi: Int) -> CGImage {
+        let w = Int(8.5 * Double(dpi)), h = 11 * dpi
+        let ctx = context(width: w, height: h, gray: true)
+        ctx.setFillColor(gray: 1, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        let font = CTFontCreateWithName("Helvetica" as CFString, CGFloat(dpi) * 0.22, nil)
+        let attr = NSAttributedString(string: "Test", attributes: [
+            NSAttributedString.Key(kCTFontAttributeName as String): font,
+            NSAttributedString.Key(kCTForegroundColorAttributeName as String): CGColor(gray: 0.25, alpha: 1),
+        ])
+        ctx.textPosition = CGPoint(x: CGFloat(dpi) * 2, y: CGFloat(h) - CGFloat(dpi) * 2)
+        CTLineDraw(CTLineCreateWithAttributedString(attr), ctx)
+        return ctx.makeImage()!
+    }
+
     static func blankPage(dpi: Int, punchHoles: Bool) -> CGImage {
         textPage(dpi: dpi, lines: [], punchHoles: punchHoles)
     }

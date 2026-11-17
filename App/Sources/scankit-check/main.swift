@@ -44,6 +44,15 @@ do {
                          crop.map { "\($0.width)x\($0.height)" } ?? "none", name(o), Date().timeIntervalSince(t0)))
         }
 
+    case "marks":
+        for path in args {
+            var img = try ImageUtil.load(URL(fileURLWithPath: path))
+            if PhotoProcessing.isUncropped(img, dpi: ImageUtil.dpi(of: URL(fileURLWithPath: path)) ?? 300),
+               let c = PhotoProcessing.detectAndCrop(img) { img = c }
+            print(String(format: "%@  ink=%.3f%%  densest patch=%.2f%%", (path as NSString).lastPathComponent,
+                         PhotoProcessing.inkFraction(img, maxSide: 1400) * 100, PhotoProcessing.densestMark(img) * 100))
+        }
+
     case "photos":
         let out = URL(fileURLWithPath: args.removeFirst())
         let backs = flag("--backs"), enhance = flag("--enhance")

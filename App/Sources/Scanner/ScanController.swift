@@ -210,6 +210,7 @@ final class ScanController: ObservableObject {
                             finishError = error
                             scanLog.error("saving failed: \(error.localizedDescription, privacy: .public)")
                         }
+                        ScanController.keepRawPagesIfAsked(temp)
                         try? FileManager.default.removeItem(at: temp)
                         Task { @MainActor in
                             self.isFinishing = false
@@ -235,6 +236,22 @@ final class ScanController: ObservableObject {
             try? FileManager.default.removeItem(at: temp)
             message = error.localizedDescription
         }
+    }
+}
+
+extension ScanController {
+    /// Developer aid, off by default and not in the UI:
+    ///   defaults write com.remymazmanian.scanner debug.keepRawPages -bool YES
+    /// copies each batch's raw scanner pages to ~/Pictures/ScanProbe/raw-<time> for offline tuning.
+    nonisolated static func keepRawPagesIfAsked(_ temp: URL) {
+        guard UserDefaults.standard.bool(forKey: "debug.keepRawPages") else { return }
+        let f = DateFormatter()
+        f.dateFormat = "yyyyMMdd-HHmmss"
+        let dest = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Pictures/ScanProbe/raw-\(f.string(from: Date()))", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? FileManager.default.copyItem(at: temp, to: dest)
+        scanLog.info("kept raw pages in \(dest.path, privacy: .public)")
     }
 }
 

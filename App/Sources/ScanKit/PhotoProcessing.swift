@@ -28,22 +28,56 @@ public enum PhotoProcessing {
         return Double(ink) / Double(n)
     }
 
-    /// Default threshold: two punch holes are about 0.1%, a short handwritten note well over 0.3%.
-    public static func isBlank(_ img: CGImage, threshold: Double = 0.002) -> Bool {
-        inkFraction(img) < threshold
+    /// Blank means no small patch of the page holds real marks (see `densestMark`).
+    /// Measured on real scans: blank paper and photo backs, punch holes included, peak at 0.33%;
+    /// a single handwritten word reached 21%. 3% sits safely between.
+    public static let blankMarkThreshold = 0.03
+
+    public static func isBlank(_ img: CGImage) -> Bool {
+        densestMark(img) < blankMarkThreshold
     }
 
-    /// Documents get a finer look than photo backs: thin or light text can wash out
-    /// when a page is shrunk too far before measuring.
-    public static func isBlankPage(_ img: CGImage, threshold: Double = 0.002) -> (blank: Bool, ink: Double) {
-        let ink = inkFraction(img, maxSide: 1400)
-        return (ink < threshold, ink)
+    /// Same test, also returning the measurement for logging.
+    public static func isBlankPage(_ img: CGImage) -> (blank: Bool, mark: Double) {
+        let mark = densestMark(img)
+        return (mark < blankMarkThreshold, mark)
     }
 
     /// A print's picture side has far more ink than any back (blank, stamped or written on).
     /// Used to notice when the scanner skipped a back, so pairing doesn't shift.
     public static func looksLikePictureSide(_ img: CGImage) -> Bool {
         inkFraction(img) > 0.05
+    }
+
+    /// Densest small patch of marks on the page, ignoring the outer margin (scanner edge lines,
+    /// punch holes). One handwritten word fills a few patches densely; dust and paper texture
+    /// are scattered single specks, so this separates them where a whole-page ink share can't.
+    public static func densestMark(_ img: CGImage, margin: Double = 0.065) -> Double {
+        let (px, w, h) = ImageUtil.grayBuffer(img, maxSide: 1400)
+        let mx = Int(Double(w) * margin), my = Int(Double(h) * margin)
+        guard w - 2 * mx > 8, h - 2 * my > 8 else { return 0 }
+        var hist = [Int](repeating: 0, count: 256), n = 0
+        for y in my..<(h - my) { for x in mx..<(w - mx) { hist[Int(px[y * w + x])] += 1; n += 1 } }
+        var acc = 0, paper = 255
+        for i in 0..<256 { acc += hist[i]; if acc * 2 >= n { paper = i; break } }
+
+        let tile = max(12, max(w, h) / 40)
+        var best = 0.0
+        var ty = my
+        while ty + tile <= h - my {
+            var tx = mx
+            while tx + tile <= w - mx {
+                var ink = 0
+                for y in ty..<(ty + tile) {
+                    let row = y * w
+                    for x in tx..<(tx + tile) where paper - Int(px[row + x]) > 40 { ink += 1 }
+                }
+                best = max(best, Double(ink) / Double(tile * tile))
+                tx += tile / 2
+            }
+            ty += tile / 2
+        }
+        return best
     }
 
     // MARK: Crop and deskew

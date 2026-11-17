@@ -63,11 +63,17 @@ Stack of 9 prints (about 4×6), 18 files, **17.5 s total** over Wi-Fi (about 2 s
 - **Backs:** the blank backs show as a plain white rectangle on gray, with about 2.5 MB files against about 5.4 MB for fronts. Blank detection on the cropped back (low variance, little ink) looks easy.
 - **Rotation:** at least one print came out with its picture sideways. Auto-rotation is needed. The driver's `VF_AUTOROTATE` is untested; the fallback is face orientation from Vision.
 
+## Photo test 2: 600 dpi, duplex, driver crop, rotation and blank-skip on
+
+Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-up. Raw output is in `~/Pictures/ScanProbe/600dpi-rgb-duplex-vf-*`.
+
+- **Auto Size Detection (`VF_AUTOCROP=1`): works well.** Each file is cropped tight to the print, at 2404–2420 × 3580–3596 px (4.0 × 6.0 in at 600 dpi), straight, with no background left. About 10 MB of TIFF per photo. **The app should use this** rather than cropping a Letter page itself: it gives less data, faster transfers and already-straight edges. Vision rectangle detection then only needs to be a check or fallback.
+- **Skip Blank Pages (`VF_BLANKPAGESKIP=10`): works.** All 9 blank backs were dropped. But the app **should not use it**: once the driver drops pages, there's no way to tell which back belongs to which front. The app should keep every back and skip blanks itself. This matches the 300 dpi test, where blank backs were easy to spot.
+- **Auto Rotation (`VF_AUTOROTATE`): does nothing for photos.** The print that came out sideways at 300 dpi came out sideways again. It's presumably text-based, for documents. **The app has to handle photo rotation itself:** run Vision face detection at each of the four orientations and pick the best, with one-click rotate buttons for photos without faces.
+
 ## Still to test
 
-Photos (reload the same stack):
-
-- [ ] 600 dpi with the driver's Auto Size Detection, Auto Rotation and Skip Blank Pages switched on (`--set VF_AUTOCROP=1 --set VF_AUTOROTATE=true --set VF_BLANKPAGESKIP=10`). This checks timing, file size, and whether the driver can do the cropping, rotation and blank-back skipping itself.
+- [ ] A photo with handwriting on the back, to tune the app's blank-back threshold.
 
 Documents (2–3 pages of anything non-sensitive):
 

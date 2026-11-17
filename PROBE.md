@@ -84,11 +84,19 @@ Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-
 - **Skip Blank Pages at level 10: did *not* skip the blank backs.** These sheets have punch holes at the top, and the scanner apparently counts the holes as content. The backs are tiny (about 90 KB), so a simple size or ink check in the app would catch them. The driver's Remove Punch Holes feature (`VF_PUNCHEDHOLE`) may fix this; that's the next test.
 - **Auto Rotation:** the pages were already upright and stayed upright. Still to test with a sheet loaded upside down.
 
+## Document test 2: 300 dpi black and white, duplex, holes, blank-skip, rotation and auto-size on
+
+Same 3 sheets, 6 files, **9.7 s total**. Raw output is in `~/Pictures/ScanProbe/300dpi-bw-duplex-vf-*`.
+
+- **Black and white: works.** The driver accepts `pixelDataType = BW` with 1-bit depth. The TIFF it writes is 8-bit gray holding only black and white, so the files are small (20–75 KB per front). For PDFs, the app should convert pages to true 1-bit itself.
+- **Remove Punch Holes (`VF_PUNCHEDHOLE`): no visible effect.** The holes still show as solid black dots on the backs.
+- **Skip Blank Pages at level 10: still keeps the blank backs**, even in black and white. The backs come out at about 6 KB each against 20–75 KB for fronts, so a size or ink check in the app catches them reliably. **The app should do its own blank-page detection in both modes** and treat the driver's version as unreliable.
+- **Auto Rotation:** all three fronts came out upright. One sheet was meant to be loaded upside down, but it's unconfirmed whether that happened, so this stays open. The app can handle rotation itself anyway: Vision's text recognition reports which way up the text is.
+
 ## Still to test: documents
 
-- [ ] Black & White (`--color bw --set VF_PUNCHEDHOLE=true --set VF_BLANKPAGESKIP=10`): does the driver accept it, and do holes plus blank-skip together drop the backs?
-- [ ] One sheet loaded upside down, to check whether `VF_AUTOROTATE` fixes text pages.
-- [ ] Long-paper mode on a receipt (`--set VF_AUTOCROP=2`).
+- [ ] Whether `VF_AUTOROTATE` fixes an upside-down page (needs confirming).
+- [ ] Long-paper mode on a receipt (`--set VF_AUTOCROP=2`). Optional.
 
 Other:
 
@@ -99,6 +107,25 @@ Other:
 
 Only the Command Line Tools are installed, not Xcode. That's enough to build and ad-hoc sign a SwiftPM executable. For the phase 2 SwiftUI app, the options are (a) install Xcode, or (b) keep SwiftPM and wrap the binary in an `.app` bundle with a small build script. Option (b) works with what's installed now.
 
-## Verdict so far
+## Verdict
 
-A combined FastFoto and ScanSmart replacement looks **feasible**, with two caveats: 8-bit color only, and no speed control. Batch feeding, duplex, 300 and 600 dpi, and TIFF output all work through Apple's public API. The driver even offers its own auto-size, deskew and rotation, which the app can use alongside or instead of Vision.
+A combined FastFoto and ScanSmart replacement is **feasible** through Apple's public API with Epson's official driver.
+
+**Confirmed working:** network discovery, batch feeding, duplex with front and back strictly alternating, 300 and 600 dpi (up to 1200), color, gray and black and white, the driver's auto size detection (excellent for both photos and paper), and TIFF output into a folder the app chooses.
+
+**The app has to do itself:**
+- Photo rotation (the driver's version does nothing for photos).
+- Blank-back and blank-page detection (the driver's version is unreliable, and it breaks front/back pairing).
+- Enhancement, file naming, JPEG and PDF output, and text recognition for searchable PDFs.
+
+**Not possible through this driver:**
+- 16-bit or 48-bit color.
+- A scan speed setting.
+- Taking over the scanner's physical button.
+- Reliable paper-loaded detection.
+- Useful status messages, such as paper jams.
+
+**Speed:**
+- Photos at 300 dpi: about 2 s per photo, both sides, with a full Letter-size area.
+- Photos at 600 dpi with auto size: about 3 s per photo.
+- Documents at 300 dpi: about 1.5 s per sheet, both sides.

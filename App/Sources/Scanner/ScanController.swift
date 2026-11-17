@@ -42,6 +42,7 @@ final class ScanController: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &bag)
         scanner.start()
+        DispatchQueue.global(qos: .utility).async { PDFBuilder.prepareTextRecognition() }
     }
 
     var busy: Bool { isScanning || isFinishing }

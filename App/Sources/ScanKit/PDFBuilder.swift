@@ -48,6 +48,25 @@ public enum PDFBuilder {
         ctx.closePDF()
     }
 
+    /// The first text recognition after an app is installed or updated can take 30+ seconds while
+    /// macOS prepares its model. Running one tiny request at launch moves that wait off the first save.
+    public static func prepareTextRecognition() {
+        let t0 = Date()
+        let size = 400
+        guard let ctx = CGContext(data: nil, width: size, height: 120, bitsPerComponent: 8, bytesPerRow: 0,
+                                  space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue)
+        else { return }
+        ctx.setFillColor(gray: 1, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: size, height: 120))
+        let font = CTFontCreateWithName("Helvetica" as CFString, 40, nil)
+        let attr = NSAttributedString(string: "Ready", attributes: [NSAttributedString.Key(kCTFontAttributeName as String): font])
+        ctx.textPosition = CGPoint(x: 20, y: 40)
+        CTLineDraw(CTLineCreateWithAttributedString(attr), ctx)
+        guard let img = ctx.makeImage() else { return }
+        let found = recognize(img).count
+        scanLog.info("text recognition ready in \(String(format: "%.1f", Date().timeIntervalSince(t0)), privacy: .public)s (\(found) line)")
+    }
+
     public static func recognize(_ img: CGImage) -> [TextLine] {
         let req = VNRecognizeTextRequest()
         req.recognitionLevel = .accurate

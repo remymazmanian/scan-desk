@@ -73,9 +73,15 @@ Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-
 
 ## Live app test: blank backs are dropped by the scanner
 
-With both sides requested and confirmed on, Auto Size Detection on, and Skip Blank Pages forced to Off, 3 prints with blank backs still came back as **3 pages**, with no backs (app log, 2026-11-17). The only run that delivered blank backs was the first 300 dpi probe run, which changed no driver features. So the driver seems to drop blank backs whenever Auto Size Detection is on, whatever the Skip Blank Pages setting says.
+With both sides requested and confirmed on, Auto Size Detection on, and Skip Blank Pages forced to Off, 3 prints with blank backs still came back as **3 pages**, with no backs (app log, 2026-11-17). The only photo run that delivered blank backs was the first 300 dpi probe run, which changed no driver features.
+
+This isn't simply Auto Size Detection: in a later Documents-mode run with the same Auto Size and Skip Blank Pages settings (plus driver auto-rotation), the blank backs of 4 paper sheets *were* delivered (3 blank, about 0.05% ink each, all skipped by the app). The driver seems to treat blank photo backs differently from blank paper. The exact trigger is unknown.
 
 The app no longer assumes pages strictly alternate front and back. If a picture arrives where a back was expected, the previous photo is saved with "no back received", and numbering stays correct.
+
+## Live app test: Documents mode
+
+4 two-sided sheets at 300 dpi in color gave 8 pages. The app skipped the 3 blank backs, kept the one back with content (2.4% ink), and saved a 5-page searchable PDF 1.7 s after the scan ended. The first document saved after installing a new build waited about 45 s, while macOS prepared its text-recognition model. The app now does that in the background at launch.
 
 ## Still to test
 

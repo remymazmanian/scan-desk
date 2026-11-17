@@ -61,7 +61,7 @@ final class ScanController: ObservableObject {
                 guard let self else { return }
                 if addToPhotos { self.addBatchToPhotos() }
             }
-        }, nothingScanned: "No photos came through. Check that the prints are loaded in the feeder, face down.",
+        }, nothingScanned: { "No photos came through. Check that the prints are loaded in the feeder, face down." },
            summary: { [weak self] in
             guard let self else { return "" }
             return "Saved \(self.count) photo\(self.count == 1 ? "" : "s") to \(o.destination.lastPathComponent)."
@@ -139,7 +139,12 @@ final class ScanController: ObservableObject {
             // Pages stay as raw files in the temp folder until the PDF or images are written here.
             saved = try pipeline.finish()
             return {}
-        }, nothingScanned: "No pages came through. Check that the pages are loaded in the feeder.",
+        }, nothingScanned: {
+            let n = pipeline.skippedBlank
+            return n > 0
+                ? "All \(n) page\(n == 1 ? "" : "s") looked blank and \(n == 1 ? "was" : "were") skipped, so nothing was saved. If that's wrong, turn off Skip blank pages and scan again."
+                : "No pages came through. Check that the pages are loaded in the feeder."
+        },
            summary: {
             let skipped = pipeline.skippedBlank
             let what = saved.count == 1 ? saved[0].lastPathComponent : "\(saved.count) files"
@@ -176,7 +181,7 @@ final class ScanController: ObservableObject {
     private func start(_ params: ScanParameters, temp: URL,
                        onPage: @escaping (URL) throws -> () -> Void,
                        finish: @escaping () throws -> () -> Void,
-                       nothingScanned: String,
+                       nothingScanned: @escaping () -> String,
                        summary: @escaping () -> String) {
         let work = self.work
         var pageError: String?
@@ -189,6 +194,7 @@ final class ScanController: ObservableObject {
                         Task { @MainActor in apply() }
                     } catch {
                         pageError = error.localizedDescription
+                        scanLog.error("page failed: \(error.localizedDescription, privacy: .public)")
                     }
                 }
             }, completion: { [weak self] scanError in
@@ -199,7 +205,10 @@ final class ScanController: ObservableObject {
                     work.async {
                         var finishError: Error?
                         var apply: () -> Void = {}
-                        do { apply = try finish() } catch { finishError = error }
+                        do { apply = try finish() } catch {
+                            finishError = error
+                            scanLog.error("saving failed: \(error.localizedDescription, privacy: .public)")
+                        }
                         try? FileManager.default.removeItem(at: temp)
                         Task { @MainActor in
                             self.isFinishing = false
@@ -207,7 +216,7 @@ final class ScanController: ObservableObject {
                             if let finishError {
                                 self.message = "Couldn't save: \(finishError.localizedDescription)"
                             } else if self.count == 0 {
-                                self.message = pageError.map { "Couldn't process the scan: \($0)" } ?? nothingScanned
+                                self.message = pageError.map { "Couldn't process the scan: \($0)" } ?? nothingScanned()
                             } else if let pageError {
                                 self.message = summary() + " Some pages failed: \(pageError)"
                             } else if let scanError {
@@ -215,6 +224,7 @@ final class ScanController: ObservableObject {
                             } else if self.message == nil {
                                 self.message = summary()
                             }
+                            scanLog.info("batch finished: \(self.message ?? "", privacy: .public)")
                         }
                     }
                 }

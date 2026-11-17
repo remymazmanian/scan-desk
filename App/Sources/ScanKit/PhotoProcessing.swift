@@ -11,8 +11,8 @@ public enum PhotoProcessing {
 
     /// Share of pixels that differ clearly from the paper color, ignoring a thin margin
     /// (edge shadows, punch holes near the border still count but are tiny).
-    public static func inkFraction(_ img: CGImage, margin: Double = 0.03) -> Double {
-        let (px, w, h) = ImageUtil.grayBuffer(img, maxSide: 700)
+    public static func inkFraction(_ img: CGImage, margin: Double = 0.03, maxSide: Int = 700) -> Double {
+        let (px, w, h) = ImageUtil.grayBuffer(img, maxSide: maxSide)
         let mx = Int(Double(w) * margin), my = Int(Double(h) * margin)
         guard w - 2 * mx > 0, h - 2 * my > 0 else { return 0 }
         var hist = [Int](repeating: 0, count: 256)
@@ -31,6 +31,13 @@ public enum PhotoProcessing {
     /// Default threshold: two punch holes are about 0.1%, a short handwritten note well over 0.3%.
     public static func isBlank(_ img: CGImage, threshold: Double = 0.002) -> Bool {
         inkFraction(img) < threshold
+    }
+
+    /// Documents get a finer look than photo backs: thin or light text can wash out
+    /// when a page is shrunk too far before measuring.
+    public static func isBlankPage(_ img: CGImage, threshold: Double = 0.002) -> (blank: Bool, ink: Double) {
+        let ink = inkFraction(img, maxSide: 1400)
+        return (ink < threshold, ink)
     }
 
     /// A print's picture side has far more ink than any back (blank, stamped or written on).

@@ -81,6 +81,7 @@ public final class PhotoPipeline {
     /// is closed without a back and the page is handled as a new front.
     public func handle(page url: URL) throws -> [Event] {
         let img = try ImageUtil.load(url)
+        scanLog.info("photo page \(url.lastPathComponent, privacy: .public): \(img.width)x\(img.height), ink \(String(format: "%.3f%%", PhotoProcessing.inkFraction(img) * 100), privacy: .public), waiting for back: \(self.current != nil)")
         if options.scanBacks, var pending = current {
             if PhotoProcessing.looksLikePictureSide(img) {
                 pending.backMissing = true
@@ -169,7 +170,9 @@ public final class DocumentPipeline {
 
     public func handle(page url: URL) throws -> Event {
         let img = try ImageUtil.load(url)
-        if options.skipBlankPages && PhotoProcessing.isBlank(img) {
+        let check = PhotoProcessing.isBlankPage(img)
+        scanLog.info("document page \(url.lastPathComponent, privacy: .public): \(img.width)x\(img.height), ink \(String(format: "%.3f%%", check.ink * 100), privacy: .public)\(check.blank && self.options.skipBlankPages ? ", skipped as blank" : "", privacy: .public)")
+        if options.skipBlankPages && check.blank {
             skippedBlank += 1
             return .skippedBlank
         }
@@ -194,12 +197,14 @@ public final class DocumentPipeline {
                     out.append(url)
                 }
             }
+            scanLog.info("saved \(out.count) page image(s)")
             return out
         }
         let base = Naming.documentBase(title: options.title, in: dir, extensions: ["pdf"])
         let url = dir.appendingPathComponent("\(base).pdf")
         try PDFBuilder.write(pages: kept, color: options.color, fallbackDPI: options.dpi,
                              searchable: options.searchable, to: url)
+        scanLog.info("saved PDF with \(self.kept.count) page(s)")
         return [url]
     }
 }

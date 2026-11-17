@@ -9,9 +9,10 @@ struct ScannerApp: App {
         Window("Scanner", id: "main") {
             ContentView()
                 .environmentObject(controller)
-                .frame(minWidth: 960, minHeight: 620)
+                .frame(minWidth: 960, minHeight: 700)
                 .onAppear { appDelegate.controller = controller }
         }
+        .defaultSize(width: 1180, height: 780)
         .windowResizability(.contentMinSize)
     }
 }

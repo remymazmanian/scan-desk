@@ -4,12 +4,20 @@ A native macOS app (Swift, SwiftUI, macOS 15+, Apple Silicon) for the Epson Fast
 
 ## Build and run
 
-Needs only the Xcode Command Line Tools.
+Building needs only the Xcode Command Line Tools. Running the tests uses Xcode if it's installed (see Tests).
 
 ```
 scripts/build-app.sh            # builds build/Scanner.app (signed ad-hoc, for this Mac only)
 scripts/build-app.sh --install  # also copies it to ~/Applications
 ```
+
+## Tests
+
+```
+scripts/test.sh
+```
+
+The tests generate their own images (synthetic prints, backs, scanner frames and text pages), so they never need real scans. They cover naming, blank and picture detection, cropping, front/back pairing (including backs the scanner drops), enhancement, manual rotation, and searchable PDFs. Automatic face-based rotation needs real photos with faces, so it is checked by hand.
 
 ## Photos mode
 

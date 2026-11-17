@@ -42,8 +42,10 @@ struct ContentView: View {
         } detail: {
             VStack(spacing: 0) {
                 preview
-                Divider()
-                strip
+                if !c.items.isEmpty {
+                    Divider()
+                    strip
+                }
                 Divider()
                 bottomBar
             }
@@ -84,7 +86,8 @@ struct ContentView: View {
             }
             Toggle("Scan backs (saved as _b)", isOn: $scanBacks)
             Toggle("Skip blank backs", isOn: $skipBlankBacks).disabled(!scanBacks)
-            Toggle("Enhance (saved as _e, original kept)", isOn: $enhance)
+            Toggle("Enhance (saved as _e)", isOn: $enhance)
+                .help("Restores faded color and sharpens lightly. The untouched original is always kept.")
         }
         Section("Saving") {
             Picker("Format", selection: $photoFormat) {
@@ -92,10 +95,6 @@ struct ContentView: View {
             }
             folderRow($photoFolder)
             Toggle("Add to Photos after each batch", isOn: $addToPhotos)
-        }
-        Section {
-            Text("Cropping, straightening and turning photos upright happen automatically. Photos without faces can't be turned automatically: right-click a thumbnail to rotate it.")
-                .font(.callout).foregroundStyle(.secondary)
         }
     }
 
@@ -186,6 +185,12 @@ struct ContentView: View {
                          ? "Load prints face down in the feeder, then click Scan."
                          : "Load pages in the feeder, then click Scan.")
                         .foregroundStyle(.secondary)
+                    if mode == .photos {
+                        Text("Photos are cropped, straightened and turned upright automatically. To fix one without faces, right-click its thumbnail.")
+                            .font(.callout).foregroundStyle(.tertiary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 420)
+                    }
                 }
             }
         }
@@ -229,6 +234,7 @@ struct ContentView: View {
         .padding(4)
         .background(selected ? Color.accentColor.opacity(0.25) : .clear, in: RoundedRectangle(cornerRadius: 6))
         .onTapGesture { c.selection = item.id }
+        .help(item.photo != nil ? "Right-click to rotate or show in Finder" : "")
         .contextMenu {
             if item.photo != nil {
                 Button("Rotate Left") { c.rotate(item.id, clockwise: false) }

@@ -16,7 +16,7 @@ public enum ScanError: LocalizedError {
     }
 }
 
-public enum ColorMode: String, CaseIterable, Identifiable, Codable {
+public enum ColorMode: String, CaseIterable, Identifiable, Codable, Sendable {
     case color, gray, bw
     public var id: String { rawValue }
     public var label: String {
@@ -28,14 +28,14 @@ public enum ColorMode: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-public enum ImageFormat: String, CaseIterable, Identifiable, Codable {
+public enum ImageFormat: String, CaseIterable, Identifiable, Codable, Sendable {
     case jpeg, tiff
     public var id: String { rawValue }
     public var label: String { self == .jpeg ? "JPEG" : "TIFF (no compression loss)" }
     public var fileExtension: String { self == .jpeg ? "jpg" : "tif" }
 }
 
-public enum DocumentFormat: String, CaseIterable, Identifiable, Codable {
+public enum DocumentFormat: String, CaseIterable, Identifiable, Codable, Sendable {
     case pdf, jpeg, tiff
     public var id: String { rawValue }
     public var label: String {

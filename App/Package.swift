@@ -18,5 +18,6 @@ let package = Package(
         ),
         .executableTarget(name: "Scanner", dependencies: ["ScanKit"], swiftSettings: swift5),
         .executableTarget(name: "scankit-check", dependencies: ["ScanKit"], swiftSettings: swift5),
+        .testTarget(name: "ScanKitTests", dependencies: ["ScanKit"]),
     ]
 )

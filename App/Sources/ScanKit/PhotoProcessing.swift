@@ -85,7 +85,7 @@ public enum PhotoProcessing {
         guard let left = cols.first(where: { colHits[$0] >= colMin }),
               let right = cols.last(where: { colHits[$0] >= colMin }), right > left else { return nil }
 
-        let rowMin = max(3, (right - left) / 4)
+        let rowMin = max(3, (right - left) / 12)   // pale areas of a picture can look like background
         var top: Int?, bottom: Int?
         for y in 0..<rowsEnd {
             var n = 0
@@ -119,7 +119,7 @@ public enum PhotoProcessing {
             let xs = [r.topLeft.x, r.topRight.x, r.bottomLeft.x, r.bottomRight.x]
             let ys = [r.topLeft.y, r.topRight.y, r.bottomLeft.y, r.bottomRight.y]
             let box = CGRect(x: xs.min()!, y: ys.min()!, width: xs.max()! - xs.min()!, height: ys.max()! - ys.min()!)
-            let tol: CGFloat = 0.03
+            let tol: CGFloat = 0.012   // a tilted print's corners still touch the outline, so a real match is close
             let agrees = abs(box.minX - bounds.minX) < tol && abs(box.maxX - bounds.maxX) < tol
                 && abs(box.minY - bounds.minY) < tol && abs(box.maxY - bounds.maxY) < tol
             if agrees, let f = CIFilter(name: "CIPerspectiveCorrection") {
@@ -129,7 +129,13 @@ public enum PhotoProcessing {
                 f.setValue(v(r.topRight), forKey: "inputTopRight")
                 f.setValue(v(r.bottomRight), forKey: "inputBottomRight")
                 f.setValue(v(r.bottomLeft), forKey: "inputBottomLeft")
-                if let out = f.outputImage { return ImageUtil.render(out, colorSpace: space) }
+                // The corrected image must also match the outline's size; a quad with a skewed
+                // corner can pass the box check yet stretch the result.
+                if let out = f.outputImage, let img2 = ImageUtil.render(out, colorSpace: space) {
+                    let ew = bounds.width * W, eh = bounds.height * H
+                    let a = CGFloat(img2.width), b = CGFloat(img2.height)
+                    if abs(a - ew) < ew * 0.03, abs(b - eh) < eh * 0.03 { return img2 }
+                }
             }
         }
         // CGImage.cropping uses top-left origin.

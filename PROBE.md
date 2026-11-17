@@ -110,7 +110,7 @@ Other:
 
 ## Toolchain note
 
-Only the Command Line Tools are installed, not Xcode. That's enough to build and ad-hoc sign a SwiftPM executable. For the phase 2 SwiftUI app, the options are (a) install Xcode, or (b) keep SwiftPM and wrap the binary in an `.app` bundle with a small build script. Option (b) works with what's installed now.
+Xcode is installed, but the active developer directory points at the Command Line Tools, which is how the probe and app were first built. The Command Line Tools build the app fine. Their copy of Swift Testing can't load its macros for this package, so `scripts/test.sh` runs the tests with Xcode's toolchain. That's the same Swift version, set through `DEVELOPER_DIR` for that one command only.
 
 ## Verdict
 

@@ -75,10 +75,19 @@ Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-
 
 - [ ] A photo with handwriting on the back, to tune the app's blank-back threshold.
 
-Documents (2–3 pages of anything non-sensitive):
+## Document test 1: 300 dpi gray, duplex, driver auto-size, rotation and blank-skip on
 
-- [ ] Gray at 300 dpi (`--color gray`) and Black & White (`--color bw`): does the driver accept them?
-- [ ] Auto Size Detection plus Skip Blank Pages, duplex, on a mixed stack.
+3 Letter sheets, 6 files, **9.0 s total**. Raw output is in `~/Pictures/ScanProbe/300dpi-gray-duplex-vf-*`.
+
+- **Gray: works.** Files are 8-bit grayscale. The front pages are 0.8–2 MB of TIFF each.
+- **Auto Size Detection: works on paper.** Each page comes out at about 2530 × 3313 px, which is Letter size, cropped to the sheet.
+- **Skip Blank Pages at level 10: did *not* skip the blank backs.** These sheets have punch holes at the top, and the scanner apparently counts the holes as content. The backs are tiny (about 90 KB), so a simple size or ink check in the app would catch them. The driver's Remove Punch Holes feature (`VF_PUNCHEDHOLE`) may fix this; that's the next test.
+- **Auto Rotation:** the pages were already upright and stayed upright. Still to test with a sheet loaded upside down.
+
+## Still to test: documents
+
+- [ ] Black & White (`--color bw --set VF_PUNCHEDHOLE=true --set VF_BLANKPAGESKIP=10`): does the driver accept it, and do holes plus blank-skip together drop the backs?
+- [ ] One sheet loaded upside down, to check whether `VF_AUTOROTATE` fixes text pages.
 - [ ] Long-paper mode on a receipt (`--set VF_AUTOCROP=2`).
 
 Other:

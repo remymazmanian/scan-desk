@@ -81,9 +81,10 @@ public final class PhotoPipeline {
     /// is closed without a back and the page is handled as a new front.
     public func handle(page url: URL) throws -> [Event] {
         let img = try ImageUtil.load(url)
-        scanLog.info("photo page \(url.lastPathComponent, privacy: .public): \(img.width)x\(img.height), ink \(String(format: "%.3f%%", PhotoProcessing.inkFraction(img) * 100), privacy: .public), waiting for back: \(self.current != nil)")
+        let ink = PhotoProcessing.inkFraction(img)
+        scanLog.info("photo page: \(img.width)x\(img.height), ink \(String(format: "%.3f%%", ink * 100), privacy: .public), waiting for back: \(self.current != nil)")
         if options.scanBacks, var pending = current {
-            if PhotoProcessing.looksLikePictureSide(img) {
+            if PhotoProcessing.looksLikePictureSide(ink: ink) {
                 pending.backMissing = true
                 current = nil
                 return [.back(pending), try handleFront(img)]
@@ -127,8 +128,8 @@ public final class PhotoPipeline {
         if PhotoProcessing.isUncropped(img, dpi: options.dpi), let cropped = PhotoProcessing.detectAndCrop(img) {
             img = cropped
         }
-        let check = PhotoProcessing.isBlankPage(img)
-        scanLog.info("photo back for \(result.name, privacy: .public): densest mark \(String(format: "%.2f%%", check.mark * 100), privacy: .public)")
+        let check = PhotoProcessing.blankCheck(img)
+        scanLog.info("photo back: densest mark \(String(format: "%.2f%%", check.mark * 100), privacy: .public)")
         if options.skipBlankBacks && check.blank {
             result.backSkippedAsBlank = true
             return .back(result)
@@ -172,8 +173,8 @@ public final class DocumentPipeline {
 
     public func handle(page url: URL) throws -> Event {
         let img = try ImageUtil.load(url)
-        let check = PhotoProcessing.isBlankPage(img)
-        scanLog.info("document page \(url.lastPathComponent, privacy: .public): \(img.width)x\(img.height), densest mark \(String(format: "%.2f%%", check.mark * 100), privacy: .public)\(check.blank && self.options.skipBlankPages ? ", skipped as blank" : "", privacy: .public)")
+        let check = PhotoProcessing.blankCheck(img)
+        scanLog.info("document page: \(img.width)x\(img.height), densest mark \(String(format: "%.2f%%", check.mark * 100), privacy: .public)\(check.blank && self.options.skipBlankPages ? ", skipped as blank" : "", privacy: .public)")
         if options.skipBlankPages && check.blank {
             skippedBlank += 1
             return .skippedBlank

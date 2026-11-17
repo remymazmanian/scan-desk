@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 
 /// Generated test images, so the repo never needs real scans.
 enum Fixtures {
-    /// The FF-680W feeder background as measured in the probe (light gray-blue).
+    /// The FF-680W feeder background as measured (light gray-blue); see PROBE.md.
     static let scannerBackground = (r: 218, g: 226, b: 231)
 
     struct RNG {

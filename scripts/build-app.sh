@@ -2,11 +2,21 @@
 # Builds Scanner.app from the Swift package and signs it.
 #   scripts/build-app.sh            -> build/Scanner.app
 #   scripts/build-app.sh --install  -> also copies it to ~/Applications
+#   NOTARY_PROFILE=<profile> scripts/build-app.sh --notarize
+#                                   -> also notarizes, staples, and writes build/Scanner.zip
 #
 # Signing: uses a "Developer ID Application" certificate from the keychain with the
 # hardened runtime. Set SIGN_IDENTITY to a certificate's SHA-1 hash or name to choose
 # one; with no Developer ID certificate it falls back to ad-hoc (this Mac only).
 set -euo pipefail
+INSTALL=0; NOTARIZE=0
+for arg in "$@"; do
+  case "$arg" in
+    --install) INSTALL=1 ;;
+    --notarize) NOTARIZE=1 ;;
+    *) echo "Unknown option: $arg" >&2; exit 2 ;;
+  esac
+done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/App"
 swift build -c release --product Scanner
@@ -38,7 +48,21 @@ else
 fi
 echo "Built $APP"
 
-if [[ "${1:-}" == "--install" ]]; then
+if [[ $NOTARIZE == 1 ]]; then
+  [[ -n "$IDENTITY" ]] || { echo "Notarizing needs a Developer ID signature." >&2; exit 1; }
+  : "${NOTARY_PROFILE:?Set NOTARY_PROFILE to a notarytool keychain profile (xcrun notarytool store-credentials)}"
+  # notarytool and stapler ship with Xcode, not the Command Line Tools.
+  XCODE="/Applications/Xcode.app/Contents/Developer"
+  [[ -d "$XCODE" ]] && export DEVELOPER_DIR="$XCODE"
+  ZIP="$ROOT/build/Scanner.zip"
+  ditto -c -k --keepParent "$APP" "$ZIP"
+  xcrun notarytool submit "$ZIP" --keychain-profile "$NOTARY_PROFILE" --wait
+  xcrun stapler staple "$APP"
+  ditto -c -k --keepParent "$APP" "$ZIP"   # zip again, now with the ticket stapled
+  echo "Notarized: $ZIP"
+fi
+
+if [[ $INSTALL == 1 ]]; then
   mkdir -p "$HOME/Applications"
   rm -rf "$HOME/Applications/Scanner.app"
   cp -R "$APP" "$HOME/Applications/"

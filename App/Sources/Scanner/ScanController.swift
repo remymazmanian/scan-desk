@@ -28,7 +28,6 @@ final class ScanController: ObservableObject {
     @Published var isFinishing = false
     @Published var count = 0
     @Published var message: String?
-    @Published var lastFolder: URL?
     @Published var photosImportable: [URL] = []
 
     private var bag = Set<AnyCancellable>()
@@ -56,13 +55,16 @@ final class ScanController: ObservableObject {
         let pipeline = PhotoPipeline(options: o)
         start(o.scanParameters, temp: temp, onPage: { url in
             let events = try pipeline.handle(page: url)
+            // Photos are saved page by page, so the raw page can go now; a big 600 dpi batch
+            // would otherwise hold gigabytes of raw scans until the end.
+            if !ScanController.keepsRawPages { try? FileManager.default.removeItem(at: url) }
             return { [weak self] in events.forEach { self?.apply($0) } }
         }, finish: {
             return { [weak self] in
                 guard let self else { return }
                 if addToPhotos { self.addBatchToPhotos() }
             }
-        }, nothingScanned: { "No photos came through. Check that the prints are loaded in the feeder, face down." },
+        }, nothingScanned: { "No photos came through. Check that the prints are loaded in the feeder." },
            summary: { [weak self] in
             guard let self else { return "" }
             return "Saved \(self.count) photo\(self.count == 1 ? "" : "s") to \(o.destination.lastPathComponent)."
@@ -170,7 +172,6 @@ final class ScanController: ObservableObject {
             count = 0
             message = nil
             photosImportable = []
-            lastFolder = destination
             return temp
         } catch {
             message = "Can't use that folder: \(error.localizedDescription)"
@@ -226,7 +227,7 @@ final class ScanController: ObservableObject {
                             } else if self.message == nil {
                                 self.message = summary()
                             }
-                            scanLog.info("batch finished: \(self.message ?? "", privacy: .public)")
+                            scanLog.info("batch finished: \(self.count) item(s)\(finishError != nil ? ", save failed" : "", privacy: .public)")
                         }
                     }
                 }
@@ -241,17 +242,19 @@ final class ScanController: ObservableObject {
 
 extension ScanController {
     /// Developer aid, off by default and not in the UI:
-    ///   defaults write com.remymazmanian.scanner debug.keepRawPages -bool YES
-    /// copies each batch's raw scanner pages to ~/Pictures/ScanProbe/raw-<time> for offline tuning.
+    ///   defaults write <bundle id> debug.keepRawPages -bool YES
+    /// copies each batch's raw scanner pages to ~/Pictures/Scanner Raw Pages/<time> for offline tuning.
+    nonisolated static var keepsRawPages: Bool { UserDefaults.standard.bool(forKey: "debug.keepRawPages") }
+
     nonisolated static func keepRawPagesIfAsked(_ temp: URL) {
-        guard UserDefaults.standard.bool(forKey: "debug.keepRawPages") else { return }
+        guard keepsRawPages else { return }
         let f = DateFormatter()
         f.dateFormat = "yyyyMMdd-HHmmss"
         let dest = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Pictures/ScanProbe/raw-\(f.string(from: Date()))", isDirectory: true)
+            .appendingPathComponent("Pictures/Scanner Raw Pages/\(f.string(from: Date()))", isDirectory: true)
         try? FileManager.default.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? FileManager.default.copyItem(at: temp, to: dest)
-        scanLog.info("kept raw pages in \(dest.path, privacy: .public)")
+        scanLog.info("kept raw pages in \(dest.lastPathComponent, privacy: .public)")
     }
 }
 

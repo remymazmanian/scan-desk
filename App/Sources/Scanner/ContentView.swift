@@ -61,7 +61,9 @@ struct ContentView: View {
             }
             ToolbarItem {
                 Button {
-                    NSWorkspace.shared.open(URL(fileURLWithPath: mode == .photos ? photoFolder : docFolder, isDirectory: true))
+                    let folder = URL(fileURLWithPath: mode == .photos ? photoFolder : docFolder, isDirectory: true)
+                    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                    NSWorkspace.shared.open(folder)
                 } label: { Label("Show Folder", systemImage: "folder") }
                 .help("Open the save folder in Finder")
             }
@@ -182,7 +184,7 @@ struct ContentView: View {
                     Image(systemName: mode == .photos ? "photo.stack" : "doc.on.doc")
                         .font(.system(size: 56)).foregroundStyle(.tertiary)
                     Text(mode == .photos
-                         ? "Load prints face down in the feeder, then click Scan."
+                         ? "Load prints in the feeder, then click Scan."
                          : "Load pages in the feeder, then click Scan.")
                         .foregroundStyle(.secondary)
                     if mode == .photos {

@@ -114,22 +114,18 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
 
     public func cancel() { scanner?.cancelScan() }
 
-    /// Sets a driver feature. The Epson driver seems to ignore a write that matches the value it
-    /// already reports (its blank-page skip read "Off" but still dropped blank backs), so every
-    /// write first moves to a different value and then to the wanted one.
+    /// Sets one of the driver's vendor features by its internal name, if the driver offers it.
     private func setFeature(_ name: String, on fu: ICScannerFunctionalUnit, enumValue: Int? = nil, bool: Bool? = nil) {
         guard let f = fu.vendorFeatures?.first(where: { $0.internalName == name }) else {
             scanLog.info("feature \(name, privacy: .public) not offered by driver")
             return
         }
         if let bool, let b = f as? ICScannerFeatureBoolean {
-            b.value = !bool
             b.value = bool
             scanLog.info("feature \(name, privacy: .public) = \(b.value)")
         }
         if let enumValue, let e = f as? ICScannerFeatureEnumeration,
            e.values.contains(NSNumber(value: enumValue)) {
-            if let other = e.values.first(where: { $0.intValue != enumValue }) { e.currentValue = other }
             e.currentValue = NSNumber(value: enumValue)
             scanLog.info("feature \(name, privacy: .public) = \(String(describing: e.currentValue), privacy: .public)")
         }
@@ -162,8 +158,10 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
         let types = scanner.availableFunctionalUnitTypes.map(\.uintValue)
         if types.isEmpty {
             if pollAttempts > 45 {
+                // Closing the session triggers a fresh attempt (see didCloseSessionWithError).
                 pollTimer?.invalidate()
-                status = .unavailable("Scanner didn't respond. Is it awake?")
+                status = .unavailable("Scanner didn't respond. Is it awake? Trying again…")
+                if scanner.hasOpenSession { scanner.requestCloseSession() }
             }
             return
         }
@@ -231,6 +229,12 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
 
     public func device(_ device: ICDevice, didCloseSessionWithError error: (any Error)?) {
         guard !stopping, device === scanner else { return }
+        pollTimer?.invalidate()
+        if let done = completion {      // session dropped mid-scan: end the batch cleanly
+            completion = nil
+            pageHandler = nil
+            done(ScanError.notReady)
+        }
         status = .connecting(deviceName)
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self, weak device] in
             guard let self, let device, device === self.scanner, !self.stopping else { return }
@@ -249,7 +253,7 @@ public final class ScannerService: NSObject, ObservableObject, ICDeviceBrowserDe
     }
 
     public func scannerDevice(_ scanner: ICScannerDevice, didScanTo url: URL) {
-        scanLog.info("page received: \(url.lastPathComponent, privacy: .public)")
+        scanLog.info("page received")
         pageHandler?(url)
     }
 

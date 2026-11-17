@@ -34,11 +34,11 @@ public enum PhotoProcessing {
     public static let blankMarkThreshold = 0.03
 
     public static func isBlank(_ img: CGImage) -> Bool {
-        densestMark(img) < blankMarkThreshold
+        blankCheck(img).blank
     }
 
-    /// Same test, also returning the measurement for logging.
-    public static func isBlankPage(_ img: CGImage) -> (blank: Bool, mark: Double) {
+    /// The blank test, also returning the measurement for logging.
+    public static func blankCheck(_ img: CGImage) -> (blank: Bool, mark: Double) {
         let mark = densestMark(img)
         return (mark < blankMarkThreshold, mark)
     }
@@ -46,8 +46,10 @@ public enum PhotoProcessing {
     /// A print's picture side has far more ink than any back (blank, stamped or written on).
     /// Used to notice when the scanner skipped a back, so pairing doesn't shift.
     public static func looksLikePictureSide(_ img: CGImage) -> Bool {
-        inkFraction(img) > 0.05
+        looksLikePictureSide(ink: inkFraction(img))
     }
+
+    public static func looksLikePictureSide(ink: Double) -> Bool { ink > 0.05 }
 
     /// Densest small patch of marks on the page, ignoring the outer margin (scanner edge lines,
     /// punch holes). One handwritten word fills a few patches densely; dust and paper texture

@@ -64,7 +64,7 @@ struct DetectionTests {
     @Test func oneSmallWordIsNotBlank() {
         let page = Fixtures.pageWithOneWord(dpi: 300)
         #expect(!PhotoProcessing.isBlank(page))
-        #expect(!PhotoProcessing.isBlankPage(page).blank)
+        #expect(!PhotoProcessing.blankCheck(page).blank)
     }
 
     @Test func punchHolesAloneCountAsBlank() {

@@ -71,6 +71,12 @@ Same 9 prints, 9 files, **35.8 s total**, about 3 s per photo after a 10 s warm-
 - **Skip Blank Pages (`VF_BLANKPAGESKIP=10`): works.** All 9 blank backs were dropped. But the app **should not use it**: once the driver drops pages, there's no way to tell which back belongs to which front. The app should keep every back and skip blanks itself. This matches the 300 dpi test, where blank backs were easy to spot.
 - **Auto Rotation (`VF_AUTOROTATE`): does nothing for photos.** The print that came out sideways at 300 dpi came out sideways again. It's presumably text-based, for documents. **The app has to handle photo rotation itself:** run Vision face detection at each of the four orientations and pick the best, with one-click rotate buttons for photos without faces.
 
+## Live app test: blank backs are dropped by the scanner
+
+With both sides requested and confirmed on, Auto Size Detection on, and Skip Blank Pages forced to Off, 3 prints with blank backs still came back as **3 pages**, with no backs (app log, 2026-11-17). The only run that delivered blank backs was the first 300 dpi probe run, which changed no driver features. So the driver seems to drop blank backs whenever Auto Size Detection is on, whatever the Skip Blank Pages setting says.
+
+The app no longer assumes pages strictly alternate front and back. If a picture arrives where a back was expected, the previous photo is saved with "no back received", and numbering stays correct.
+
 ## Still to test
 
 - [ ] A photo with handwriting on the back, to tune the app's blank-back threshold.

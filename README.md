@@ -4,6 +4,10 @@ A native macOS app (Swift, SwiftUI, macOS 15+, Apple Silicon) for the Epson Fast
 
 This project isn't affiliated with or endorsed by Epson. Epson, FastFoto and ScanSmart are trademarks of their owner.
 
+## Download
+
+Get `ScanDesk.zip` from the [latest release](https://github.com/remymazmanian/scan-desk/releases/latest), unzip it, and move **Scan Desk** to your Applications folder. The app is signed and notarized, so it opens normally. It needs macOS 15 or later on Apple Silicon, and Epson's driver, which comes with Epson Scan 2.
+
 ## Build and run
 
 Building needs only the Xcode Command Line Tools. Running the tests uses Xcode if it's installed (see Tests).

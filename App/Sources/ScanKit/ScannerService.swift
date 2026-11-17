@@ -2,7 +2,7 @@ import Foundation
 import ImageCaptureCore
 import os
 
-let scanLog = Logger(subsystem: "local.scanner.app", category: "scanner")
+let scanLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Scanner", category: "scanner")
 
 public enum ScannerStatus: Equatable {
     case searching

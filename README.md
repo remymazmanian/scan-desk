@@ -7,9 +7,11 @@ A native macOS app (Swift, SwiftUI, macOS 15+, Apple Silicon) for the Epson Fast
 Building needs only the Xcode Command Line Tools. Running the tests uses Xcode if it's installed (see Tests).
 
 ```
-scripts/build-app.sh            # builds build/Scanner.app (signed ad-hoc, for this Mac only)
+scripts/build-app.sh            # builds and signs build/Scanner.app
 scripts/build-app.sh --install  # also copies it to ~/Applications
 ```
+
+**Signing:** the build script signs with a "Developer ID Application" certificate from the keychain, using the hardened runtime and a secure timestamp. To pick a specific certificate, set `SIGN_IDENTITY` to its SHA-1 hash. Without such a certificate the app is signed ad-hoc and runs only on the Mac that built it. Builds aren't notarized yet, so a copy downloaded on another Mac would be blocked by Gatekeeper.
 
 ## Tests
 

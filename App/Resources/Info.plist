@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Scanner</string>
 	<key>CFBundleIdentifier</key>
-	<string>local.scanner.app</string>
+	<string>com.remymazmanian.scanner</string>
 	<key>CFBundleExecutable</key>
 	<string>Scanner</string>
 	<key>CFBundlePackageType</key>

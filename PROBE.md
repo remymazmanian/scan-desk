@@ -5,7 +5,7 @@ Probe tool: `Probe/` (SwiftPM CLI, no dependencies). Build and run:
 ```
 cd Probe && swift build -c release && codesign -s - -f .build/release/ScanProbe
 .build/release/ScanProbe list
-.build/release/ScanProbe scan --dpi 300 --duplex
+.build/release/ScanProbe scan --dpi 300 --duplex [--color gray|bw] [--set VF_NAME=value]
 ```
 
 Driver used: Epson ICA module `EPSON ES0170.app` (installed by Epson Scan 2), module version 1.0.
@@ -35,13 +35,42 @@ Driver used: Epson ICA module `EPSON ES0170.app` (installed by Epson Scan 2), mo
 - **The paper sensor looks unreliable.** `documentLoaded` still reported `true` right after the feeder scan finished. This needs another look with a known-empty feeder before the app relies on it.
 - **Not exposed: page count, end-of-stack, paper jam.** The app should count files as they arrive and treat `didCompleteScanWithError` as end of stack.
 
-## Still to test (needs real photos in the feeder)
+## Scope: one app replacing FastFoto and ScanSmart
 
-- [ ] A stack of 3–5 photos at 300 dpi, duplex: page order, and which physical side counts as "front".
+The app has a **Photos** mode (the FastFoto replacement) and a **Documents** mode (the ScanSmart replacement), sharing one scanner connection.
+
+The Documents mode needs these, all built from Apple frameworks with no dependencies:
+
+- **Output:** multi-page PDF from one feeder run (PDFKit), plus single JPEG, PNG or TIFF.
+- **Searchable PDF:** text recognition on-device (Vision), with an invisible text layer added to the PDF.
+- **Color modes:** Color, Gray and Black & White. They depend on the driver accepting Gray and BW, which still needs testing.
+- **Clean-up:** blank-page skipping, auto page size and deskew. The driver offers all three as built-in features; the app adds its own fallback.
+- **Long receipts or paper:** uses the driver's long-paper mode (the feeder is 8.5 × 240 in).
+- **Naming:** a date pattern plus an optional title, saved into a folder you pick.
+
+ScanSmart features that are **out of scope** under the "no network" rule: sending to cloud services or email, and Epson Connect. You can still share a finished file through the standard macOS Share menu, which uses your existing apps and doesn't make the scan app itself call anything.
+
+The scanner's physical button can't be taken over through Image Capture, because Epson's Event Manager owns it. It will keep opening FastFoto or ScanSmart unless that's changed in Event Manager. Scans start from the app.
+
+## Still to test
+
+Photos (3–5 prints in the feeder):
+
+- [ ] 300 dpi, duplex: page order, and which physical side counts as "front".
 - [ ] The same stack at 600 dpi: timing and file size.
-- [ ] The driver's Auto Size Detection, Deskew and Auto Rotation on photos, compared with doing it in Vision.
-- [ ] Skip Blank Pages on photo backs.
+- [ ] Driver Auto Size Detection, Deskew and Auto Rotation on photos (`--set VF_AUTOCROP=1 --set VF_AUTOROTATE=true`), compared with doing it in Vision.
+- [ ] Skip Blank Pages on photo backs (`--set VF_BLANKPAGESKIP=10`).
+
+Documents (2–3 pages of anything non-sensitive):
+
+- [ ] Gray at 300 dpi (`--color gray`) and Black & White (`--color bw`): does the driver accept them?
+- [ ] Auto Size Detection plus Skip Blank Pages, duplex, on a mixed stack.
+- [ ] Long-paper mode on a receipt (`--set VF_AUTOCROP=2`).
+
+Other:
+
 - [ ] USB connection (optional).
+- [ ] Whether ScanSmart or FastFoto running at the same time can block a scan from our app.
 
 The test scan run so far went through whatever was already in the feeder. That turned out to be a printed document, not photos, so it only confirms the mechanics above.
 
@@ -51,4 +80,4 @@ Only the Command Line Tools are installed, not Xcode. That's enough to build and
 
 ## Verdict so far
 
-A full FastFoto replacement looks **feasible**, with two caveats: 8-bit color only, and no speed control. Batch feeding, duplex, 300 and 600 dpi, and TIFF output all work through Apple's public API. The driver even offers its own auto-size, deskew and rotation, which the app can use alongside or instead of Vision.
+A combined FastFoto and ScanSmart replacement looks **feasible**, with two caveats: 8-bit color only, and no speed control. Batch feeding, duplex, 300 and 600 dpi, and TIFF output all work through Apple's public API. The driver even offers its own auto-size, deskew and rotation, which the app can use alongside or instead of Vision.

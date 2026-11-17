@@ -7,6 +7,9 @@
 //   Options: --match <text>  (device name filter, default "FF-680")
 //            --out <dir>     (default ~/Pictures/ScanProbe)
 //            --timeout <sec> (default 300)
+//            --color rgb|gray|bw (default rgb)
+//            --set VF_NAME=value  (set a driver vendor feature, repeatable;
+//                                  bool features take true/false)
 
 import Foundation
 import ImageCaptureCore
@@ -20,6 +23,8 @@ struct Options {
     var mode = "list"
     var dpi = 300
     var duplex = false
+    var color = "rgb"
+    var features: [String: String] = [:]
     var match = "FF-680"
     var out = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Pictures/ScanProbe", isDirectory: true)
@@ -35,6 +40,11 @@ func parseOptions() -> Options {
         switch a {
         case "--dpi": o.dpi = Int(args.removeFirst()) ?? 300
         case "--duplex": o.duplex = true
+        case "--color": o.color = args.removeFirst().lowercased()
+        case "--set":
+            let kv = args.removeFirst().split(separator: "=", maxSplits: 1).map(String.init)
+            guard kv.count == 2 else { print("--set needs VF_NAME=value"); exit(2) }
+            o.features[kv[0]] = kv[1]
         case "--match": o.match = args.removeFirst()
         case "--out": o.out = URL(fileURLWithPath: (args.removeFirst() as NSString).expandingTildeInPath, isDirectory: true)
         case "--timeout": o.timeout = TimeInterval(args.removeFirst()) ?? 300
@@ -349,8 +359,12 @@ final class Probe: NSObject, ICDeviceBrowserDelegate, ICScannerDeviceDelegate {
         }
         feeder.measurementUnit = .inches
         feeder.resolution = opts.dpi
-        feeder.bitDepth = .depth8Bits
-        feeder.pixelDataType = .RGB
+        switch opts.color {
+        case "gray": feeder.pixelDataType = .gray; feeder.bitDepth = .depth8Bits
+        case "bw": feeder.pixelDataType = .BW; feeder.bitDepth = .depth1Bit
+        default: feeder.pixelDataType = .RGB; feeder.bitDepth = .depth8Bits
+        }
+        applyVendorFeatures(feeder)
         if opts.duplex {
             if feeder.supportsDuplexScanning { feeder.duplexScanningEnabled = true }
             else { log("Duplex requested but driver reports supportsDuplexScanning=false.") }
@@ -367,7 +381,7 @@ final class Probe: NSObject, ICDeviceBrowserDelegate, ICScannerDeviceDelegate {
 
         let stamp = DateFormatter()
         stamp.dateFormat = "yyyyMMdd-HHmmss"
-        let dir = opts.out.appendingPathComponent("\(opts.dpi)dpi\(opts.duplex ? "-duplex" : "")-\(stamp.string(from: Date()))", isDirectory: true)
+        let dir = opts.out.appendingPathComponent("\(opts.dpi)dpi-\(opts.color)\(opts.duplex ? "-duplex" : "")\(opts.features.isEmpty ? "" : "-vf")-\(stamp.string(from: Date()))", isDirectory: true)
         do { try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true) }
         catch { log("Cannot create \(dir.path): \(error)"); finish(code: 1); return }
         scanDir = dir
@@ -379,6 +393,29 @@ final class Probe: NSObject, ICDeviceBrowserDelegate, ICScannerDeviceDelegate {
         phase = "scanning"
         scanStart = Date()
         scanner.requestScan()
+    }
+
+    func applyVendorFeatures(_ fu: ICScannerFunctionalUnit) {
+        guard !opts.features.isEmpty else { return }
+        let byName = Dictionary((fu.vendorFeatures ?? []).compactMap { f in f.internalName.map { ($0, f) } },
+                                uniquingKeysWith: { a, _ in a })
+        for (name, value) in opts.features.sorted(by: { $0.key < $1.key }) {
+            guard let f = byName[name] else { log("Vendor feature \(name) not exposed by driver."); continue }
+            switch f {
+            case let b as ICScannerFeatureBoolean:
+                b.value = ["true", "1", "on", "yes"].contains(value.lowercased())
+            case let e as ICScannerFeatureEnumeration:
+                guard let n = Int(value), e.values.contains(NSNumber(value: n)) else {
+                    log("\(name): \(value) not one of \(e.values)"); continue
+                }
+                e.currentValue = NSNumber(value: n)
+            case let r as ICScannerFeatureRange:
+                r.currentValue = CGFloat(Double(value) ?? Double(r.defaultValue))
+            default:
+                log("\(name): unsupported feature type"); continue
+            }
+            log("Set \(describe(f).trimmingCharacters(in: .whitespaces))")
+        }
     }
 
     func scannerDevice(_ scanner: ICScannerDevice, didScanTo url: URL) {

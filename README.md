@@ -13,6 +13,8 @@ scripts/build-app.sh --install  # also copies it to ~/Applications
 
 **Signing:** the build script signs with a "Developer ID Application" certificate from the keychain, using the hardened runtime and a secure timestamp. To pick a specific certificate, set `SIGN_IDENTITY` to its SHA-1 hash. Without such a certificate the app is signed ad-hoc and runs only on the Mac that built it. Builds aren't notarized yet, so a copy downloaded on another Mac would be blocked by Gatekeeper.
 
+**Icon:** `swift scripts/make-icon.swift` redraws the icon in code and writes `App/Resources/AppIcon.icns`, which the build script bundles.
+
 ## Tests
 
 ```

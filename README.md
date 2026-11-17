@@ -60,7 +60,7 @@ The first three are limits of the scanner or its driver; see [PROBE.md](PROBE.md
 
 ## Known limits
 
-- **Paper size:** the app scans a US Letter-size area (8.5 × 11 in). A4 and Legal pages are longer and haven't been tested.
+- **Paper size:** pages up to 8.5 in wide and at least 14 in long (Legal length) scan in full; the scanner crops each page to its real size. A4 fits inside that but hasn't been run itself. Sheets longer than 14 in are untested.
 - **Connection:** tested over Wi-Fi only, not USB.
 - **Rotation:** photos without faces aren't turned automatically.
 - **Backs:** a back whose only writing is within about half an inch of the edge counts as blank. A back covered in dense writing or print can be mistaken for a new photo; it's still saved, as its own numbered file.

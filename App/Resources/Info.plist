@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Scan Desk</string>
+	<key>CFBundleDisplayName</key>
+	<string>Scan Desk</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.remymazmanian.scandesk</string>
+	<key>CFBundleExecutable</key>
+	<string>ScanDesk</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.photography</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Scan Desk adds your finished scans to Photos when you ask it to.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Scan Desk looks for your scanner on the local network.</string>
+</dict>
+</plist>

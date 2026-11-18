@@ -2,6 +2,8 @@
 
 A native macOS app (Swift, SwiftUI, macOS 15+, Apple Silicon) for the Epson FastFoto FF-680W. It replaces both Epson FastFoto (photos) and Epson ScanSmart (documents). It talks to the scanner through Apple's Image Capture framework and Epson's official driver (installed with Epson Scan 2), and uses no third-party code. It has no telemetry, and its only network traffic is finding the scanner and scanning from it.
 
+**Tested scanner:** Scan Desk was built for and tested on one scanner, the Epson FastFoto FF-680W. It isn't tied to that model: it works through Image Capture with any scanner that has a document feeder, so other models may work as is or with small changes (see [Other scanners](#other-scanners)). It's free and open source under the MIT license, so you're welcome to adapt it to your own scanner and workflow.
+
 This project isn't affiliated with or endorsed by Epson. Epson, FastFoto and ScanSmart are trademarks of their owner.
 
 ## Download
@@ -68,7 +70,27 @@ The first three are limits of the scanner or its driver; see [PROBE.md](PROBE.md
 - **Connection:** tested over Wi-Fi only, not USB.
 - **Rotation:** photos without faces aren't turned automatically.
 - **Backs:** a back whose only writing is within about half an inch of the edge counts as blank. A back covered in dense writing or print can be mistaken for a new photo; it's still saved, as its own numbered file.
-- **Scanner model:** built and tested with the FF-680W only.
+- **Scanner model:** tested with the FF-680W only. See [Other scanners](#other-scanners).
+
+## Other scanners
+
+Scan Desk doesn't check the scanner's name or model. It connects to the first scanner macOS finds through Image Capture (a USB connection is preferred) and needs that scanner to have a document feeder. What to expect:
+
+- **Other Epson feeder scanners** (for example other FastFoto or ES/DS models) use the same Epson Scan 2 driver and may work unchanged, but none has been tested.
+- **Feeder scanners from other brands** should scan. Epson's driver settings (auto size, deskew, auto rotate, double-feed detection) are skipped when a driver doesn't offer them, and Scan Desk's own cropping, rotation, blank detection, front/back pairing and searchable PDFs still apply. Photo cropping may need tuning for a different scanner background.
+- **Flatbed scanners** aren't supported. Adding them means choosing the flatbed, setting the scan area, and finding several photos on the glass.
+- **More than one scanner:** there's no picker yet; Scan Desk chooses one automatically.
+
+To adapt Scan Desk to your scanner, start with the probe. It lists what your scanner's driver offers and runs test scans:
+
+```
+cd Probe && swift build -c release && codesign -s - -f .build/release/ScanProbe
+.build/release/ScanProbe list --match "<part of your scanner's name>"
+```
+
+[PROBE.md](PROBE.md) shows what this found for the FF-680W and how the app relies on it. Then adjust `App/Sources/ScanKit/ScannerService.swift`, which holds everything that talks to the scanner.
+
+Forks are welcome. If you get it working with another scanner, a pull request that adds it to this section, with what you changed, helps the next person.
 
 ## Layout
 
